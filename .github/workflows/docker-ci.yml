@@ -1,4 +1,4 @@
-name: CI - Docker Build for Travel Web
+name: CI/CD - Docker Build & Deploy for Travel Web
 
 on:
   push:
@@ -24,10 +24,20 @@ jobs:
       - name: List Docker images
         run: docker images
 
-      - name: Run container test
+      - name: Stop & remove old container (if exists)
         run: |
-          docker run -d -p 8080:80 --name travel_test travel_front
+          docker rm -f travel_test || true
+
+      - name: Deploy container (keep running)
+        run: |
+          docker run -d \
+            --restart unless-stopped \
+            -p 80:80 \
+            --name travel_test \
+            travel_front
+
+      - name: Verify deployment
+        run: |
           sleep 5
           docker ps
-          docker logs travel_test
           curl -I http://localhost:8080
